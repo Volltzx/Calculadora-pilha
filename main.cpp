@@ -1,565 +1,653 @@
 #include <iostream>
 #include <cctype>
-#include <cstring>
-#define TAM 6
+#include <string>
+#include <fstream>
 
 using namespace std;
 
-typedef struct{
-    string data;
-    string diaSemana[7] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
-    string horaInicial[6];
-    string horaFinal[6];
-    string tipo[6];
-    string local[6];
-    string assunto[6];
-}infSemana;
+typedef struct Aeroporto
+{
+    string cidade;
+    int codigo;
+    string codigoCid;
+    int contVoos;
+    int numeroVoos[50];
+} infAeroporto;
+
+typedef struct listaVoo
+{
+    int numVoo;
+    string origem;
+    string destino;
+    listaVoo* proximo;
+} infVoo;
+struct Nodo
+{
+    infVoo voos;
+    struct Nodo *proximo;
+};
+typedef struct Nodo nodo;
+
 
 
 int menu();
-void iniciaNovaSemana(infSemana agendaSemana[], int contHora[]);
-void formataAgenda(infSemana agendaSemana[]);
-void incluirCompromisso(infSemana agendaSemana[], int contHora[]);
-int buscaDataRec(string dia, int contDia, infSemana agendaSemana[]);
-bool checaHr(string hrInicial, string hrFinal, infSemana agendaSemana[], int contHora[], int x);
-void armazenaTipo(string tipo, infSemana agendaSemana[], int contDia, int contHora[]);
-void exclueCompromisso(infSemana agendaSemana[], int contHora[]);
-int buscaCompRec(string hrInicial, string hrFinal, int contDia, int compEncontrado, infSemana agendaSemana[], int contHora[]);
-void exclueCompRec(int contDia, int contHora[], int compEncontrado, infSemana agendaSemana[]);
-void relatorio1(infSemana agendaSemana[], int contHora[]);
-void ordenaVetRec(int contHora[], int contDDia, int contador, string hrInicial, string hrFinal, infSemana agendaSemana[]);
-void alteraPos(int contDia, int contador, infSemana agendaSemana[]);
-void relatorio2(infSemana agendaSemana[], int contHora[]);
 bool verificaNum(string x, string limInf, string limSup);
-bool validaHora(string busca);
-bool limitaData(string data);
+void CadastraAeroporto(infAeroporto aeroportos[], int &contAero, int &z);
+void MostraAeroporto(infAeroporto aeroportos[],int contAero);
+void ExcluiAeroporto (infAeroporto aeroportos[], int &contAero, string &buscaExcluiAero, string &orig, int &contVoo);
+void ordenaVetDec(infAeroporto aeroportos[], int contAero);
+void ordenaVetCre(infAeroporto aeroportos[], int contAero);
+void CadastraVoo(infVoo **ptr_lista, int &contVoo, infAeroporto aeroportos[], int contAero, int &k);
+void MostraVoo(infVoo *lista, infVoo voos, infAeroporto aeroportos[], int contAero);
+void excluiVoo (infVoo **ptr_lista, infVoo voos, infAeroporto aeroportos[], int contAero, int &contVoo);
+void excluiAeroportoVoos (infVoo **ptr_lista, infVoo voos, string buscaExcluiAero, string orig);
+int verifExisteAero(infAeroporto aeroportos[], string busca, int contAero);
+int verifExisteVoo(infVoo *lista, infVoo voos, int busca);
+void gravainfo(ofstream &ofs, infAeroporto aeroportos[], int contAero, infVoo *ptr_lista, infVoo voos, int contVoo);
+int verifExisteVoo2(infVoo *lista, infVoo voos, string busca);
+void recupInfo(ifstream &ifs, infAeroporto aeroportos[], int &contAero, infVoo **ptr_lista, int &contVoo);
+void recupVoo(infVoo **ptr_lista, int numeroVooTemp, string destinoVooTemp, string origemVooTemp);
+void excluiAeroportoVoosDestino(infVoo **ptr_lista, infVoo voos, string busca, infAeroporto aeroportos[], int contAero, int &v, string orig);
+bool verificaSeENum(string numero);
 
-
-int main(){
-    infSemana agendaSemana[7];
-    int resp=0, contHora[7]={0};
-    do{
-        resp = menu();
-        switch(resp){
+int main()
+{
+    infVoo voos, *umalista=NULL;
+    infAeroporto aeroportos[10];
+    string buscaExcluiAero, verifica4, orig="";
+    ofstream ofs;
+    ifstream ifs;
+    int opcao, contAero=0, z=0, contVoo=0, v=0, k, num;
+    do
+    {
+        opcao = menu();
+        switch(opcao)
+        {
         case 1:
-            iniciaNovaSemana(agendaSemana, contHora);
+            CadastraAeroporto(aeroportos,contAero,z);
             break;
         case 2:
-            incluirCompromisso(agendaSemana, contHora);
+            ExcluiAeroporto(aeroportos,contAero,buscaExcluiAero,orig,contVoo);
+            //cout << orig << endl;
+            for(int i=0; i<contVoo; i++)
+            {
+            //if(aeroportos[i].contVoos != 0){
+            excluiAeroportoVoos(&umalista,voos,buscaExcluiAero,orig);
+            //excluiAeroportoVoosDestino(&umalista,voos,buscaExcluiAero,aeroportos,contAero,v,orig);
+            }
+            //}
+            //cout << v;
+      //for(int m=0;m<contAero;m++){
+            //for(int c=0;c<aeroportos[m].contVoos;c++){
+                //if(v==aeroportos[m].numeroVoos[c]){
+                //cout << aeroportos[m].cidade << endl;
+                //getchar();
+                //getchar();
+                //aeroportos[m].contVoos--;
+                //}
+            //}
+        //}
             break;
         case 3:
-            exclueCompromisso(agendaSemana, contHora);
+            MostraAeroporto(aeroportos,contAero);
             break;
         case 4:
-            relatorio1(agendaSemana, contHora);
+            CadastraVoo(&umalista,contVoo,aeroportos,contAero,k);
             break;
         case 5:
-            relatorio2(agendaSemana, contHora);
+            excluiVoo(&umalista,voos,aeroportos,contAero,contVoo);
+            break;
+        case 6:
+            MostraVoo(umalista,voos,aeroportos,contAero);
+            break;
+        case 8:
+            gravainfo(ofs,aeroportos,contAero,umalista,voos,contVoo);
+            break;
+        case 9:
+            recupInfo(ifs,aeroportos,contAero,&umalista,contVoo);
+            break;
         }
-    }while(resp != 6);
-    return 0;
+    }
+    while(opcao != 10);
 }
 
-int menu(){
+int menu()
+{
     string resp;
     int respNum;
     bool verif = false;
-    do{
-    system("cls");
-    cout << "------------- Agenda Semanal! -------------" << endl;
-    cout << "1) Inicializar uma nova semana." << endl;
-    cout << "2) Inclusao de um novo compromisso." << endl;
-    cout << "3) Exclusao de compromisso" << endl;
-    cout << "4) Relatorio 1." << endl;
-    cout << "5) Relatorio 2." << endl;
-    cout << "6) Sair." << endl;
-    cout << "------------ Escolha uma opcao ------------" << endl;
-    cout << "Opcao:";
-    cin >> resp;
-    verif = verificaNum(resp, "1", "6");
-    }while(verif==false);
+    do
+    {
+        system("cls");
+        cout << "------------- Aeroportos -------------" << endl;
+        cout << "1) Cadastrar aeroporto." << endl;
+        cout << "2) Remover aeroporto." << endl;
+        cout << "3) Mostrar aeroportos." << endl;
+        cout << "4) Cadastrar voo" << endl;
+        cout << "5) Remove voo" << endl;
+        cout << "6) Mostrar voo" << endl;
+        cout << "7) Procurar voo." << endl;
+        cout << "8) Gravar informacoes. " << endl;
+        cout << "9) Recuperar informacoes. " << endl;
+        cout << "10) Sair." << endl;
+        cout << "------------ Escolha uma opcao ------------" << endl;
+        cout << "Opcao:";
+        cin >> resp;
+        verif = verificaNum(resp, "1", "10");
+    }
+    while(verif==false);
     respNum = atoi(resp.c_str());
     return respNum;
-
 }
 
-bool verificaNum(string x, string limInf, string limSup){
+bool verificaNum(string x, string limInf, string limSup)
+{
     int xNum, infNum, supNum;
     if(x == "")
         return false;
-    else
-    if(!isdigit(x.at(0)))
+    else if(!isdigit(x.at(0)))
         return false;
     xNum = atoi(x.c_str());
     infNum = atoi(limInf.c_str());
     supNum = atoi(limSup.c_str());
     if(xNum<infNum or xNum>supNum)
-            return false;
+        return false;
     return true;
 }
+void CadastraAeroporto(infAeroporto aeroportos[], int &contAero, int &z)
+{
 
+    string nomeCidade, codigoAero;
+    int verifica;
 
-void iniciaNovaSemana(infSemana agendaSemana[], int contHora[]){
-    char confirmacao;
-    string data;
-    bool verif, verif2;
-    system("cls");
-    cout << "Certeza que deseja abrir uma nova semana?" << endl;
-    cout << "AVISO: Perdera Agenda JA REGISTRADA!" << endl;
-    cout << "[S/N]: "; cin >> confirmacao;
-    if(toupper(confirmacao) == 'S'){
-        cin.ignore();
-        for(int i=0; i<7 ;i++){
-            contHora[i] = 0;
-            for(int j=0; j<6; j++){
-                agendaSemana[i].horaInicial[j] = {""};
-                agendaSemana[i].horaFinal[j] = {""};
-                agendaSemana[i].tipo[j] = {""};
-                agendaSemana[i].local[j] = {""};
-                agendaSemana[i].assunto[j] = {""};
-            }
-        }
-        do{
-        cout << "--------------------------------------------" << endl;
-        cout << "Digite data inicial da semana [xx/xx/xxxx]: "; getline(cin, data);
-        verif2 = limitaData(data);
-        }while(verif2 == false);
-        agendaSemana[0].data = data;
-        cout << "Agenda Inicializada!";
-        formataAgenda(agendaSemana);
+    cout << "Digite o nome da cidade: " << endl;
+    cin.ignore();
+    getline(cin, nomeCidade);
+    cout << "Digite o codigo do aeroporto: " << endl;
+    cin >> codigoAero;
+    verifica = verifExisteAero(aeroportos,codigoAero,contAero);
+    if(verifica == 1)
+    {
+        cout << "Aeroporto ja existe" << endl;
+        getchar();
         getchar();
     }
-
-}
-
-bool limitaData(string data){
-    int convertDia, convertMes, convertAno;
-    string dia, mes, ano;
-
-    if(data == "")
-        return false;
-
-    if(data.size() != 10){
-        return false;
-    }
-    if(!isdigit(data.at(0)) and !isdigit(data.at(1)) and !isdigit(data.at(3)) and !isdigit(data.at(4)) and !isdigit(data.at(6)) and !isdigit(data.at(7)) and !isdigit(data.at(8)) and !isdigit(data.at(9))){
-       return false;
-    }
-    if(data.at(2) != '/' and data.at(5) != '/'){
-        return false;
-
-    }else{
-        for(int i=0; i<2; i++)
-            dia += data.at(i);
-        for(int i=3; i<5; i++)
-            mes += data.at(i);
-        for(int i=6;i<10; i++)
-            ano += data.at(i);
-        convertDia = atoi(dia.c_str());
-        convertMes = atoi(mes.c_str());
-        convertAno = atoi(ano.c_str());
-        if(convertMes == 1 or convertMes == 3 or convertMes == 5 or convertMes == 7 or convertMes == 8 or convertMes == 10 or convertMes == 12){
-            if(convertDia > 31)
-                return false;
-        }
-        if(convertMes == 2){
-            if(convertDia > 28)
-                return false;
-        }
-        if(convertMes == 4 or convertMes == 6 or convertMes == 9 or convertMes == 11){
-            if(convertDia>30)
-                return false;
-        }
-        if(convertMes > 12 or convertMes < 0)
-            return false;
-
-        if(convertDia < 0)
-            return false;
-
-        if(convertAno < 0)
-            return false;
-
-
-    }
-    return true;
-}
-
-
-void formataAgenda(infSemana agendaSemana[]){
-    int convertDia[7], convertMes[7], convertAno[7];
-    string dia[7], mes[7], ano[7];
-    for(int i=0; i<2; i++)
-        dia[0] += agendaSemana[0].data.at(i);
-    for(int i=3; i<5; i++)
-        mes[0] += agendaSemana[0].data.at(i);
-    for(int i=6; i<10; i++)
-        ano[0] += agendaSemana[0].data.at(i);
-    convertDia[0] = atoi(dia[0].c_str());
-    convertMes[0] = atoi(mes[0].c_str());
-    convertAno[0] = atoi(ano[0].c_str());
-    for(int i=1; i<7;i++){
-    convertDia[i] = convertDia[i-1];
-    convertMes[i] = convertMes[i-1];
-    convertAno[i] = convertAno[i-1];
-
-    if(convertMes[i] == 1 or convertMes[i] == 3 or convertMes[i] == 5 or convertMes[i] == 7 or convertMes[i] == 8 or convertMes[i] == 10){
-        if(convertDia[i]>=31){
-            convertDia[i] = 0;
-            convertMes[i]++;
-        }
-    }
-        if(convertMes[i] == 2){
-            if(convertDia[i] >=28){
-                convertDia[i] = 0;
-                convertMes[i]++;
-            }
-        }
-        else
-            if(convertMes[i] == 4 or convertMes[i] == 6 or convertMes[i] == 9 or convertMes[i] == 11){
-                if(convertDia[i]>=30){
-                    convertDia[i] = 0;
-                    convertMes[i]++;
-                }
-            }else
-                if(convertMes[i] == 12){
-                    if(convertDia[i]>=31){
-                        convertDia[i] = 0;
-                        convertMes[i] = 1;
-                        convertAno[i]++;
-                    }
-
-                }
-        convertDia[i]++;
-        dia[i] = to_string(convertDia[i]);
-        mes[i] = to_string(convertMes[i]);
-        ano[i] = to_string(convertAno[i]);
-
-    }
-
-    for(int j=1; j<7; j++){
-
-        if(convertDia[j]>0 and convertDia[j]<10)
-            agendaSemana[j].data = "0" + dia[j];
-        else
-            agendaSemana[j].data = dia[j];
-        if(convertMes[j]>=1 and convertMes[j]<10)
-            agendaSemana[j].data += "/0" + mes[j];
-
-        else
-            agendaSemana[j].data += "/" + mes[j];
-
-        agendaSemana[j].data += "/" + ano[j];
-
-    }
-}
-
-
-void incluirCompromisso(infSemana agendaSemana[], int contHora[]){
-    string dia, hrInicial, hrFinal, tipo;
-    int contDia = 7, contador=0;
-    bool verifica, verif, verif2;
-
-    system("cls");
-    cin.ignore();
-        cout << "Dia para adicionar compromisso [xx/xx/xxxx]: "; getline(cin,dia);
-        contDia = buscaDataRec(dia, contDia, agendaSemana);
-        if(contDia < 0){
-            cout << "Dia da semana Invalido!";
-            getchar();
-        }else{
-            do{
-                system("cls");
-                cout << "----------------------------------------------------" << endl;
-                cout << "Horario Inicial que deseja incluir o compromisso [xxhxx]: "; getline(cin, hrInicial);
-                verif = validaHora(hrInicial);
-                cout << "Horario Final que deseja incluir o compromisso [xxhxx]: "; getline(cin, hrFinal);
-                verif2 = validaHora(hrFinal);
-                cout << "----------------------------------------------------" << endl;
-            }while(verif == false or verif2 ==false);
-            verifica = checaHr(hrInicial, hrFinal, agendaSemana, contHora, contDia);
-            if(verifica == false){
-                cout << "Esse horario ja possui compromisso ou horario Invalido!";
-                getchar();
-            }
-            if(verifica){
-                do{
-                cout << "---------------------------------------------" << endl;
-                cout << "|                 Tipo :                    |" << endl;
-                cout << "| 1)Reuniao.  2)Atividade.  3)Aniversario.  |" << endl;
-                cout << "---------------------------------------------" << endl;
-                cout << "opcao: "; getline(cin, tipo);
-                verif = verificaNum(tipo, "1", "3");
-                }while(verif==false);
-                armazenaTipo(tipo, agendaSemana, contDia, contHora);
-                cout << "----------------------------------" << endl;
-                cout << "Digite o Local: "; getline(cin, agendaSemana[contDia].local[contHora[contDia]]);
-                cout << "----------------------------------" << endl;
-                cout << "Digite o Assunto: "; getline(cin, agendaSemana[contDia].assunto[contHora[contDia]]);
-                cout << "----------------------------------" << endl;
-                agendaSemana[contDia].horaInicial[contHora[contDia]] = hrInicial;
-                agendaSemana[contDia].horaFinal[contHora[contDia]] = hrFinal;
-                contador = contHora[contDia];
-                contHora[contDia]++;
-                cout << "Adicionado com Sucesso!";
-                getchar();
-            }
-        }
-        ordenaVetRec(contHora, contDia, contador, hrInicial, hrFinal, agendaSemana);
-}
-
-bool validaHora(string busca){
-    if(busca == ""){
-        return false;
-    }
-
-    if(busca.size() != 5){
-        return false;
-    }
-    if(!isdigit(busca.at(0)) and !isdigit(busca.at(1)) and !isdigit(busca.at(3)) and !isdigit(busca.at(4))){
-       return false;
-    }
-    if(busca.at(2) != 'h')
-        return false;
-
-    return true;
-}
-
-
-void ordenaVetRec(int contHora[], int contDia, int contador, string hrInicial, string hrFinal, infSemana agendaSemana[]){
-    string horaInicialC, horaFinalC;
-    int horaInicial, horaFinal, horaInicialVet, horaFinalVet;
-    if(contador < 1)
-        contador=0;
-    if(contador > 0){
-        for(int i=0; i<5; i++){
-            if(isdigit(hrInicial.at(i)))
-                horaInicialC += hrInicial.at(i);
-            if(isdigit(hrFinal.at(i)))
-                horaFinalC += hrFinal.at(i);
-    }
-        horaInicial = atoi(horaInicialC.c_str());
-        horaFinal = atoi(horaFinalC.c_str());
-        horaInicialC = "";
-        horaFinalC = "";
-        horaInicialVet = 0;
-        horaFinalVet = 0;
-        for(int j=0; j<5; j++){
-            if(isdigit(agendaSemana[contDia].horaInicial[contador-1].at(j)))
-                horaInicialC += agendaSemana[contDia].horaInicial[contador-1].at(j);
-            if(isdigit(agendaSemana[contDia].horaFinal[contador-1].at(j)))
-                horaFinalC += agendaSemana[contDia].horaFinal[contador-1].at(j);
-        }
-        horaInicialVet = atoi(horaInicialC.c_str());
-        horaFinalVet = atoi(horaFinalC.c_str());
-        if(horaInicial < horaInicialVet and horaFinal < horaFinalVet)
-            alteraPos(contDia, contador, agendaSemana);
-        ordenaVetRec(contHora, contDia, contador-1, hrInicial, hrFinal, agendaSemana);
-    }
-
-}
-
-void alteraPos(int contDia, int contador, infSemana agendaSemana[]){
-    string aux;
-    aux = agendaSemana[contDia].horaInicial[contador-1];
-    agendaSemana[contDia].horaInicial[contador-1] = agendaSemana[contDia].horaInicial[contador];
-    agendaSemana[contDia].horaInicial[contador] = aux;
-    aux = agendaSemana[contDia].horaFinal[contador-1];
-    agendaSemana[contDia].horaFinal[contador-1] = agendaSemana[contDia].horaFinal[contador];
-    agendaSemana[contDia].horaFinal[contador] = aux;
-    aux = agendaSemana[contDia].tipo[contador-1];
-    agendaSemana[contDia].tipo[contador-1] = agendaSemana[contDia].tipo[contador];
-    agendaSemana[contDia].tipo[contador] = aux;
-    aux = agendaSemana[contDia].local[contador-1];
-    agendaSemana[contDia].local[contador-1] = agendaSemana[contDia].local[contador];
-    agendaSemana[contDia].local[contador] = aux;
-    aux = agendaSemana[contDia].assunto[contador-1];
-    agendaSemana[contDia].assunto[contador-1] = agendaSemana[contDia].assunto[contador];
-    agendaSemana[contDia].assunto[contador] = aux;
-}
-
-void armazenaTipo(string tipo, infSemana agendaSemana[], int contDia, int contHora[]){
-    if(tipo == "1")
-        agendaSemana[contDia].tipo[contHora[contDia]] = "Reuniao.";
     else
-        if(tipo == "2")
-            agendaSemana[contDia].tipo[contHora[contDia]] = "Atividade.";
+    {
+        aeroportos[contAero].cidade = nomeCidade;
+        aeroportos[contAero].codigoCid = codigoAero;
+        aeroportos[contAero].codigo = z+1;
+        aeroportos[contAero].contVoos = 0;
+        contAero++;
+        z++;
+        cout << "Aeroporto cadastrado com sucesso!" << endl;
+        getchar();
+        getchar();
+    }
+}
+void ExcluiAeroporto (infAeroporto aeroportos[], int &contAero, string &buscaExcluiAero, string &orig, int &contVoo)
+{
+
+    infVoo *umalista;
+    int verifica;
+
+
+    cout << "Digite o codigo do aeroporto que deseja excluir: ";
+    cin >> buscaExcluiAero;
+    verifica = verifExisteAero(aeroportos,buscaExcluiAero,contAero);
+    if(verifica == 0)
+    {
+        cout << "Aeroporto nao encontrado" << endl;
+        getchar();
+    }
+    else
+    {
+        if(contAero==1)
+        {
+            for(int i=0; i<contAero; i++)
+            {
+                if(buscaExcluiAero==aeroportos[i].codigoCid)
+                {
+                    orig = aeroportos[i].cidade;
+                    contVoo = contVoo - aeroportos[i].contVoos;
+                    aeroportos[i].cidade = "";
+                    aeroportos[i].codigo = 0;
+                    aeroportos[i].codigoCid = "";
+                    aeroportos[i].contVoos = 0;
+                    cout << "Aeroporto excluido!" << endl;
+                    contAero--;
+                    getchar();
+
+                }
+            }
+        }
         else
-            if(tipo == "3")
-                agendaSemana[contDia].tipo[contHora[contDia]] = "Aniversario.";
-}
-
-int buscaDataRec(string dia, int contDia, infSemana agendaSemana[]){
-    if(contDia < 0)
-        return -1;
-    if(dia == agendaSemana[contDia].data)
-        return contDia;
-
-    return buscaDataRec(dia, contDia-1, agendaSemana);
-}
-
-bool checaHr(string hrInicial, string hrFinal, infSemana agendaSemana[], int contHora[], int contDia){
-    string horaInicialC, horaFinalC;
-    int horaInicial, horaFinal, horaInicialVet, horaFinalVet;
-    for(int i=0; i<5; i++){
-        if(isdigit(hrInicial.at(i)))
-            horaInicialC += hrInicial.at(i);
-        if(isdigit(hrFinal.at(i)))
-            horaFinalC += hrFinal.at(i);
-    }
-    horaInicial = atoi(horaInicialC.c_str());
-    horaFinal = atoi(horaFinalC.c_str());
-
-    for(int i=0; i<contHora[contDia]; i++){
-        horaInicialC = "";
-        horaFinalC = "";
-        horaInicialVet = 0;
-        horaFinalVet = 0;
-        for(int j=0; j<5; j++){
-            if(isdigit(agendaSemana[contDia].horaInicial[i].at(j)))
-                horaInicialC += agendaSemana[contDia].horaInicial[i].at(j);
-            if(isdigit(agendaSemana[contDia].horaFinal[i].at(j)))
-                horaFinalC += agendaSemana[contDia].horaFinal[i].at(j);
-        }
-        horaInicialVet = atoi(horaInicialC.c_str());
-        horaFinalVet = atoi(horaFinalC.c_str());
-        if((horaInicial >= horaInicialVet and horaInicial <= horaFinalVet) or (horaFinal >= horaInicialVet and horaFinal <= horaFinalVet))
-            return false;
-    }
-    if((horaInicial < 0000 or horaInicial>2359) or (horaFinal < 0000 or horaFinal>2359))
-        return false;
-    if(horaInicial >= horaFinal and horaFinal != 0000)
-        return false;
-    return true;
-}
-
-
-void exclueCompromisso(infSemana agendaSemana[],int contHora[]){
-    string dataEx, hrInicial, hrFinal;
-    int compEncontrado, contDia=7;
-    bool verif, verif2;
-
-    system("cls");
-    cin.ignore();
-    cout << "Dia para excluir compromisso [xx/xx/xxxx]: "; getline(cin,dataEx);
-    contDia = buscaDataRec(dataEx, contDia, agendaSemana);
-    if(contDia < 0){
-        cout << "Dia da semana Invalido!";
-        getchar();
-    }else{
-        compEncontrado = contHora[contDia]-1;
-        do{
-            system("cls");
-            cout << "----------------------------------------------------" << endl;
-            cout << "Horario Inicial que deseja incluir o compromisso [xxhxx]: "; getline(cin, hrInicial);
-            verif = validaHora(hrInicial);
-            cout << "Horario Final que deseja incluir o compromisso [xxhxx]: "; getline(cin, hrFinal);
-            verif2 = validaHora(hrFinal);
-            system("cls");
-            cout << "----------------------------------------------------" << endl;
-        }while(verif == false and verif2 == false);
-        compEncontrado = buscaCompRec(hrInicial, hrFinal, contDia, compEncontrado, agendaSemana, contHora);
-        if(compEncontrado < 0){
-            cout << "Horario Inexistente!" << endl;
-            getchar();
-        }
-        if(compEncontrado >= 0){
-            exclueCompRec(contDia, contHora, compEncontrado, agendaSemana);
-            cout << "Horario Excluido!";
-            getchar();
-        }
-    }
-
-}
-
-int buscaCompRec(string hrInicial, string hrFinal, int contDia, int compEncontrado, infSemana agendaSemana[], int contHora[]){
-    if(compEncontrado < 0)
-        return -1;
-    if((hrInicial == agendaSemana[contDia].horaInicial[compEncontrado]) and (hrFinal == agendaSemana[contDia].horaFinal[compEncontrado])){
-        return compEncontrado;
-    }
-
-    return buscaCompRec(hrInicial, hrFinal, contDia, compEncontrado-1, agendaSemana, contHora);
-}
-
-void exclueCompRec(int contDia, int contHora[], int compEncontrado, infSemana agendaSemana[]){
-    if(compEncontrado > 0){
-        for(int i=compEncontrado; i<contHora[contDia]; i++){
-            agendaSemana[contDia].horaInicial[i] = agendaSemana[contDia].horaInicial[i + 1];
-            agendaSemana[contDia].horaFinal[i] = agendaSemana[contDia].horaFinal[i + 1];
-            agendaSemana[contDia].tipo[i] = agendaSemana[contDia].tipo[i + 1];
-            agendaSemana[contDia].local[i] = agendaSemana[contDia].local[i + 1];
-            agendaSemana[contDia].assunto[i] = agendaSemana[contDia].assunto[i + 1];
-        }
-    }
-    agendaSemana[contDia].horaInicial[contHora[contDia]-1] = "";
-    agendaSemana[contDia].horaFinal[contHora[contDia]-1] = "";
-    agendaSemana[contDia].tipo[contHora[contDia]-1] = "";
-    agendaSemana[contDia].local[contHora[contDia]-1] = "";
-    agendaSemana[contDia].assunto[contHora[contDia]-1] = "";
-    contHora[contDia]--;
-
-}
-
-void relatorio1(infSemana agendaSemana[], int contHora[]){
-    string dataEx;
-    int contDia=7;
-    system("cls");
-    cin.ignore();
-    cout << "Dia para visualizar compromisso [xx/xx/xxxx]: "; getline(cin,dataEx);
-    contDia = buscaDataRec(dataEx, contDia, agendaSemana);
-    if(contDia < 0){
-        cout << "Dia da semana Invalido!";
-        getchar();
-    }else{
-        if(contHora[contDia] <= 0){
-            cout << "Dia sem Compromisso!" << endl;
-            getchar();
-        }else{
-            cout << "-------------------------------------" << endl;
-            cout << agendaSemana[contDia].data << endl;
-            cout << "-------------------------------------" << endl;
-            cout << "Dia: " << agendaSemana[contDia].diaSemana[contDia] << endl;
-            cout << endl;
-            for(int i=0; i<contHora[contDia]; i++){
-                cout << "-------------------------------------" << endl;
-                cout << "Hora Inicial: " << agendaSemana[contDia].horaInicial[i] << endl;
-                cout << "Tipo: " << agendaSemana[contDia].tipo[i] << endl;
-                cout << "Local: " << agendaSemana[contDia].local[i] << endl;
-                cout << "Assunto: " << agendaSemana[contDia].assunto[i] << endl;
-                cout << "Hora Final: " << agendaSemana[contDia].horaFinal[i] << endl;
-                cout << "-------------------------------------" << endl;
-                getchar();
+        {
+            for(int i=0; i<contAero; i++)
+            {
+                if(buscaExcluiAero==aeroportos[i].codigoCid)
+                {
+                    orig = aeroportos[i].cidade;
+                    contVoo = contVoo - aeroportos[i].contVoos;
+                    aeroportos[i].cidade = "";
+                    aeroportos[i].codigo = 0;
+                    aeroportos[i].codigoCid = "";
+                    aeroportos[i].contVoos = 0;
+                    cout << "Aeroporto excluido!" << endl;
+                    ordenaVetDec(aeroportos,contAero);
+                    contAero--;
+                    ordenaVetCre(aeroportos,contAero);
+                    getchar();
+                }
             }
         }
     }
 }
 
 
+void MostraAeroporto(infAeroporto aeroportos[], int contAero)
+{
+    if(contAero==0){
+        cout << "Nenhum aeroporto cadastrado." << endl;
+        getchar();
+        getchar();
+    }else{
+    cout << "Indice / Nome / Codigo / Quantidade de voos."<< endl;
+    for(int i=0; i<contAero; i++)
+    {
+        cout << "[" << aeroportos[i].codigo << "] " << aeroportos[i].cidade << " / " << aeroportos[i].codigoCid << " / " << aeroportos[i].contVoos << endl;
+    }
+    getchar();
+    getchar();
+    }
 
-void relatorio2(infSemana agendaSemana[], int contHora[]){
-    system("cls");
-    for(int i=0; i<7; i++){
-        cout << "-------------------------------------" << endl;
-        cout << agendaSemana[i].data << endl;
-        cout << "-------------------------------------" << endl;
-        cout << "Dia: " << agendaSemana[i].diaSemana[i] << endl;
-        if(contHora[i] <=0){
-            cout <<  "-------------------------------------" << endl;
-            cout <<  "Dia sem compromissos!" << endl;
-            cout <<  "-------------------------------------" << endl;
+}
+void ordenaVetDec(infAeroporto aeroportos[], int contAero)
+{
+
+    unsigned int posicao=0;
+    for(unsigned int i=0; i<contAero-1; i++)
+    {
+        posicao = i;
+        for(unsigned int j=i+1; j<contAero; j++)
+        {
+            if(aeroportos[j].codigo > aeroportos[posicao].codigo) posicao = j;
+        }
+        swap(aeroportos[posicao].codigo, aeroportos[i].codigo);
+        swap(aeroportos[posicao].cidade, aeroportos[i].cidade);
+        swap(aeroportos[posicao].codigoCid, aeroportos[i].codigoCid);
+        swap(aeroportos[posicao].contVoos, aeroportos[i].contVoos);
+
+    }
+}
+void ordenaVetCre(infAeroporto aeroportos[], int contAero)
+{
+
+    unsigned int posicao=0;
+    for(unsigned int i=0; i<contAero-1; i++)
+    {
+        posicao = i;
+        for(unsigned int j=i+1; j<contAero; j++)
+        {
+            if(aeroportos[j].codigo < aeroportos[posicao].codigo) posicao = j;
+        }
+        swap(aeroportos[posicao].codigo, aeroportos[i].codigo);
+        swap(aeroportos[posicao].cidade, aeroportos[i].cidade);
+        swap(aeroportos[posicao].codigoCid, aeroportos[i].codigoCid);
+        swap(aeroportos[posicao].contVoos, aeroportos[i].contVoos);
+    }
+}
+void CadastraVoo(infVoo **ptr_lista, int &contVoo, infAeroporto aeroportos[], int contAero, int &k)
+{
+    listaVoo *p, *pant;
+    infVoo voos;
+    string origem, destino, busca, numeroSt;
+    int verifica1, verifica2, n, numero;
+    bool verificaSeNum=false;
+    p = new listaVoo;
+    if(p==NULL)
+    {
+        cout << "sem memória";
+        cin.get();
+        exit(1);
+    }
+    do{
+    cout << "Digite o numero de voo: " << endl;
+    cin >> numeroSt;
+    verificaSeNum = verificaSeENum(numeroSt);
+    }while(verificaSeNum==false);
+    numero = atoi(numeroSt.c_str());
+    verifica1 = verifExisteVoo(*ptr_lista,voos,numero);
+    if(verifica1==1)
+    {
+        cout << "Voo ja existe" << endl;
+        getchar();
+        getchar();
+    }
+    else
+    {
+        cout << "Digite a origem do voo: " << endl;
+        cin>>origem;
+        busca=origem;
+        verifica2 = verifExisteAero(aeroportos,busca,contAero);
+        if(verifica2==0)
+        {
+            cout << "Aeroporto nao encontrado" << endl;
+            getchar();
             getchar();
         }
-        for(int j=0; j<contHora[i]; j++){
-            cout << "-------------------------------------" << endl;
-            cout << "Hora Inicial: " << agendaSemana[i].horaInicial[j] << endl;
-            cout << "Tipo: " << agendaSemana[i].tipo[j] << endl;
-            cout << "Local: " << agendaSemana[i].local[j] << endl;
-            cout << "Assunto: " << agendaSemana[i].assunto[j] << endl;
-            cout << "Hora Final: " << agendaSemana[i].horaFinal[j] << endl;
-            cout << "-------------------------------------" << endl;
-            getchar();
+        else
+        {
+            verifica2 = 0;
+            cout << "Digite o destino do voo: " << endl;
+            cin>>destino;
+            busca=destino;
+            verifica2 = verifExisteAero(aeroportos,busca,contAero);
+            if(verifica2==0)
+            {
+                cout << "Aeroporto nao encontrado" << endl;
+                getchar();
+                getchar();
+            }
+            else
+            {
+                if(origem==destino)
+                {
+                    cout << "ERRO: Aeroporto de origem igual a de destino." << endl;
+                    getchar();
+                    getchar();
+                }
+                else
+                {
+                    p->numVoo = numero;
+                    p->origem = origem;
+                    p->destino = destino;
+                    for(int i=0; i<contAero; i++)
+                    {
+                        if(aeroportos[i].codigoCid == origem)
+                            n=i;
+                    }
+                    contVoo++;
+                    aeroportos[n].numeroVoos[aeroportos[n].contVoos] = numero;
+                    aeroportos[n].contVoos++;
+
+                    p->proximo = NULL;
+                    if (*ptr_lista==NULL)
+                    {
+                        *ptr_lista = p;
+                        return;
+                    }
+                    pant = *ptr_lista;
+                    while (pant->proximo != NULL)
+                        pant = pant->proximo;
+                    pant->proximo = p;
+                }
+            }
+        }
+    }
+}
+void MostraVoo(infVoo *lista, infVoo voos, infAeroporto aeroportos[], int contAero)
+{
+
+    listaVoo *p = lista;
+    string busca;
+    int encontrou=0, verifica;
+
+    cout << "Digite o codigo do aeroporto para mostrar voos: " << endl;
+    cin >> busca;
+    verifica = verifExisteAero(aeroportos,busca,contAero);
+    if(verifica == 0)
+    {
+        cout << "Aeroporto nao encontrado" << endl;
+        getchar();
+        getchar();
+    }
+    else
+    {
+        while(p != NULL)
+        {
+            if(p->origem == busca)
+            {
+                cout << "Numero do voo: " << p->numVoo << endl;
+                cout << "Origem do voo: " << p->origem << endl;
+                cout << "Destino do voo: " << p->destino << endl;
+                encontrou++;
+            }
+            p=p->proximo;
+        }
+        if(encontrou==0)
+        {
+            cout << "Nao foi encontrado voos";
         }
         getchar();
-        system("cls");
+        getchar();
     }
+}
+void excluiVoo (infVoo **ptr_lista, infVoo voos, infAeroporto aeroportos[], int contAero, int &contVoo)
+{
+    infVoo *p, *pant = NULL;
+    int busca;
+    string buscaSt;
+    bool verificaSeNum=false;
+    int encontrou=0;
+    p = *ptr_lista;
+    do{
+    cout << "Digite o numero do voo a ser excluido: " << endl;
+    cin >> buscaSt;
+    verificaSeNum = verificaSeENum(buscaSt);
+    }while(verificaSeNum==false);
+    busca = atoi(buscaSt.c_str());
+    if (p!=NULL)
+    {
+        if (p->numVoo == busca)
+        {
+            for(int i=0; i<contAero; i++)
+            {
+                if(p->origem == aeroportos[i].codigoCid)
+                    aeroportos[i].contVoos--;
+            }
+            encontrou++;
+            contVoo--;
+
+            *ptr_lista = p->proximo;
+            delete p;
+            return;
+        }
+        pant = *ptr_lista;
+        p = p->proximo;
+        while (p != NULL && p->numVoo != busca)
+        {
+            pant = p;
+            p=p->proximo;
+        }
+        if (p!=NULL)
+        {
+            pant->proximo = p->proximo;
+            delete p;
+        }
+    }
+    if(encontrou == 0)
+        cout << "Voo nao encontrado." << endl;
+    getchar();
+    getchar();
+}
+void excluiAeroportoVoos(infVoo **ptr_lista, infVoo voos, string busca, string orig)
+{
+    infVoo *p, *pant = NULL;
+    p = *ptr_lista;
+    if (p!=NULL)
+    {
+        if (p->origem == busca)
+        {
+            *ptr_lista = p->proximo;
+            delete p;
+            return;
+        }
+        pant = *ptr_lista;
+        p = p->proximo;
+        while (p != NULL && p->origem != busca)
+        {
+            pant = p;
+            p=p->proximo;
+        }
+        if (p!=NULL)
+        {
+            pant->proximo = p->proximo;
+            delete p;
+        }
+    }
+}
+void excluiAeroportoVoosDestino(infVoo **ptr_lista, infVoo voos, string busca, infAeroporto aeroportos[], int contAero, int &v, string orig)
+{
+    infVoo *p, *pant = NULL;
+    p = *ptr_lista;
+    if (p!=NULL)
+      if (p->destino == busca)
+        {
+            v=p->numVoo;
+            *ptr_lista = p->proximo;
+            delete p;
+            return;
+        }
+        pant = *ptr_lista;
+        p = p->proximo;
+        while (p != NULL && p->destino != busca){
+        while(p->origem != orig){
+            pant = p;
+            p=p->proximo;
+        }
+        }
+        if (p!=NULL)
+        {
+            pant->proximo = p->proximo;
+            v=p->numVoo;
+            delete p;
+        }
+}
+int verifExisteVoo(infVoo *lista, infVoo voos, int busca)
+{
+
+    listaVoo *p = lista;
+    int encontrou=0;
+    while(p != NULL)
+    {
+        if(p->numVoo == busca)
+        {
+            return 1;
+        }
+        p=p->proximo;
+    }
+    return 0;
+}
+int verifExisteVoo2(infVoo *lista, infVoo voos, string busca)
+{
+
+    listaVoo *p = lista;
+    int encontrou=0;
+    while(p != NULL)
+    {
+        if(p->origem == busca)
+        {
+            return 1;
+        }
+        p=p->proximo;
+    }
+    return 0;
+}
+int verifExisteAero(infAeroporto aeroportos[], string busca, int contAero)
+{
+    for(int i=0; i<contAero; i++)
+    {
+        if(busca==aeroportos[i].codigoCid)
+            return 1;
+    }
+    return 0;
+}
+
+void gravainfo(ofstream &ofs, infAeroporto aeroportos[], int contAero, infVoo *ptr_lista, infVoo voos, int contVoo)
+{
+    listaVoo *p = ptr_lista;
+    string busca;
+    int verifica;
+    ofstream fout("teste.txt");
+    fout << contAero << endl;
+    fout << contVoo << endl;
+    for (int i = 0; i < contAero; i++)
+    {
+        fout << aeroportos[i].codigo << endl;
+        fout << aeroportos[i].cidade << endl;
+        fout << aeroportos[i].codigoCid << endl;
+        fout << aeroportos[i].contVoos << endl;
+        busca = aeroportos[i].codigoCid;
+        for(int j = 0; j<aeroportos[i].contVoos; j++)
+        {
+            verifica = verifExisteVoo2(p,voos,busca);
+            if(verifica == 1)
+            {
+                fout << p->numVoo << endl;
+                fout << p->destino << endl;
+                p=p->proximo;
+            }
+        }
+    }
+    cout << "Informacoes gravadas com sucesso!" << endl;
+    getchar();
+    getchar();
+    fout.close();
+}
+void recupInfo(ifstream &ifs, infAeroporto aeroportos[], int &contAero, infVoo **ptr_lista, int &contVoo)
+{
+    ifstream fin("teste.txt");
+    int numeroVooTemp;
+    string destinoVooTemp, origemVooTemp, auxCid;
+    fin >> contAero;
+    fin >> contVoo;
+    for(int i=0; i<contAero; i++)
+    {
+        fin >> aeroportos[i].codigo;
+        fin >> aeroportos[i].cidade;
+        fin >> aeroportos[i].codigoCid;
+        origemVooTemp = aeroportos[i].codigoCid;
+        fin >> aeroportos[i].contVoos;
+        for(int j=0; j<aeroportos[i].contVoos; j++)
+        {
+            fin >> numeroVooTemp;
+            aeroportos[i].numeroVoos[j] = numeroVooTemp;
+            fin >> destinoVooTemp;
+            recupVoo(ptr_lista,numeroVooTemp,destinoVooTemp,origemVooTemp);
+        }
+    }
+    cout << "Informacoes recuperadas com sucesso!" << endl;
+    getchar();
+    getchar();
+    fin.close();
+}
+void recupVoo(infVoo **ptr_lista, int numeroVooTemp, string destinoVooTemp, string origemVooTemp)
+{
+    listaVoo *p, *pant;
+    infVoo voos;
+    p = new listaVoo;
+
+    p->numVoo = numeroVooTemp;
+    p->origem = origemVooTemp;
+    p->destino = destinoVooTemp;
+
+    p->proximo = NULL;
+    if (*ptr_lista==NULL)
+    {
+        *ptr_lista = p;
+        return;
+    }
+    pant = *ptr_lista;
+    while (pant->proximo != NULL)
+        pant = pant->proximo;
+    pant->proximo = p;
+}
+bool verificaSeENum(string numero){
+for(int i=0;i<numero.size();i++){
+if(!isdigit(numero.at(i))){
+    return false;
+}
+}
+return true;
 }
