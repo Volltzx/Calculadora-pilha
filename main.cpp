@@ -13,12 +13,12 @@ int main(){
     cout << " INICIO " << endl;
     cout << " ZERA " << endl;
     cout << " SOMA(valor)" << endl;
-    cout << " SUBTRAI(valor)" << endl;
-    cout << " MULTIPLICA(valor)" << endl;
-    cout << " DIVIDE(valor)" << endl;
-    cout << " PARCELAS" << endl;
-    cout << " IGUAL" << endl;
-    cout << " FIM" << endl;
+    cout << " SUBTRAI(valor) " << endl;
+    cout << " MULTIPLICA(valor) " << endl;
+    cout << " DIVIDE(valor) " << endl;
+    cout << " PARCELAS " << endl;
+    cout << " IGUAL " << endl;
+    cout << " FIM " << endl;
     cout << "Faça suas operações:" << endl;
     while (operacao != "FIM"){
         getline(cin, operacao);
